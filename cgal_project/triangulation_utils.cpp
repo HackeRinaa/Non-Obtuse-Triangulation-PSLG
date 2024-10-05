@@ -2,21 +2,16 @@
 #include <cmath>
 #include <iostream>
 
-
-
+// Check if a triangle is obtuse
 bool isObtuse(const CDT::Face_handle& face) {
-    // Assuming the points are stored in `face->vertex(0)->point()`, etc.
     Point p0 = face->vertex(0)->point();
     Point p1 = face->vertex(1)->point();
     Point p2 = face->vertex(2)->point();
     
-    // Compute the square of the lengths of each side
     double a2 = CGAL::squared_distance(p1, p2);
     double b2 = CGAL::squared_distance(p0, p2);
     double c2 = CGAL::squared_distance(p0, p1);
 
-    // Check if the triangle is obtuse using the cosine rule:
-    // If the angle at p0 is obtuse: a^2 + b^2 < c^2
     if ((a2 + b2) < c2) return true;  // Angle at p0 is obtuse
     if ((a2 + c2) < b2) return true;  // Angle at p1 is obtuse
     if ((b2 + c2) < a2) return true;  // Angle at p2 is obtuse
@@ -24,26 +19,38 @@ bool isObtuse(const CDT::Face_handle& face) {
     return false;  // No obtuse angles
 }
 
-
+// Calculate the Steiner point for an obtuse triangle
 Point calculateSteinerPoint(const CDT::Face_handle& face) {
     Point p0 = face->vertex(0)->point();
     Point p1 = face->vertex(1)->point();
     Point p2 = face->vertex(2)->point();
 
-    // Compute the square of the lengths of each side
     double a2 = CGAL::squared_distance(p1, p2);
     double b2 = CGAL::squared_distance(p0, p2);
     double c2 = CGAL::squared_distance(p0, p1);
 
-    // Find the longest edge
+    // Find the longest edge and return its midpoint
     if (a2 >= b2 && a2 >= c2) {
-        return CGAL::midpoint(p1, p2);  // Midpoint of the longest edge
+        return CGAL::midpoint(p1, p2);
     } else if (b2 >= a2 && b2 >= c2) {
         return CGAL::midpoint(p0, p2);
     } else {
         return CGAL::midpoint(p0, p1);
     }
 }
+
+// Attempt to flip diagonals to reduce obtuse angles
+bool tryDiagonalFlip(CDT& cdt, CDT::Face_handle face) {
+    for (int i = 0; i < 3; ++i) {
+        if (cdt.is_flipable(face, i)) {
+            cdt.flip(face, i);  // Correct usage of flip method
+            std::cout << "Diagonal flip applied." << std::endl;
+            return true;  // A flip was successful
+        }
+    }
+    return false;  // No flip was possible
+}
+
 
 void insertSteinerPoints(CDT& cdt) {
     bool has_obtuse_angle = true;
@@ -60,12 +67,14 @@ void insertSteinerPoints(CDT& cdt) {
 
         // Iterate over all finite faces in the triangulation
         for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
-            if (isObtuse(face)) {
-                Point steinerPoint = calculateSteinerPoint(face);
-                steinerPoints.push_back(steinerPoint);  // Collect Steiner points
-                has_obtuse_angle = true;  // Flag to keep iterating
-                obtuse_angles++;  // Increment count of obtuse angles
-                std::cout << "Found obtuse angle, inserting Steiner point: " << steinerPoint << std::endl;
+            if (!tryDiagonalFlip(cdt, face)) {  // Correct call without reference
+                if (isObtuse(face)) {
+                    Point steinerPoint = calculateSteinerPoint(face);
+                    steinerPoints.push_back(steinerPoint);  // Collect Steiner points
+                    has_obtuse_angle = true;  // Flag to keep iterating
+                    obtuse_angles++;  // Increment count of obtuse angles
+                    std::cout << "Found obtuse angle, inserting Steiner point: " << steinerPoint << std::endl;
+                }
             }
         }
 
