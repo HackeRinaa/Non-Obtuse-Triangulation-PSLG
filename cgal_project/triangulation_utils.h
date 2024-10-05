@@ -16,5 +16,6 @@ bool isObtuse(const CDT::Face_handle& face);
 
 Point calculateSteinerPoint(const CDT& cdt);
 void insertSteinerPoints(CDT& cdt);
+bool tryDiagonalFlip(CDT& cdt , CDT::Face_handle& face);
 
 #endif // TRIANGULATION_UTILS_H
