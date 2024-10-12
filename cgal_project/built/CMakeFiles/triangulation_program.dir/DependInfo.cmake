@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/Non-Obtuse-Triangulation-PSLG/cgal_project/main.cpp" "CMakeFiles/triangulation_program.dir/main.cpp.o" "gcc" "CMakeFiles/triangulation_program.dir/main.cpp.o.d"
-  "/home/Non-Obtuse-Triangulation-PSLG/cgal_project/triangulation_utils.cpp" "CMakeFiles/triangulation_program.dir/triangulation_utils.cpp.o" "gcc" "CMakeFiles/triangulation_program.dir/triangulation_utils.cpp.o.d"
+  "/home/foutrovic/Desktop/Projects/Non-Obtuse-Triangulation-PSLG/cgal_project/main.cpp" "CMakeFiles/triangulation_program.dir/main.cpp.o" "gcc" "CMakeFiles/triangulation_program.dir/main.cpp.o.d"
+  "/home/foutrovic/Desktop/Projects/Non-Obtuse-Triangulation-PSLG/cgal_project/triangulation_utils.cpp" "CMakeFiles/triangulation_program.dir/triangulation_utils.cpp.o" "gcc" "CMakeFiles/triangulation_program.dir/triangulation_utils.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
