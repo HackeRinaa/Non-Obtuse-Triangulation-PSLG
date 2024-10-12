@@ -17,3 +17,8 @@ Mock main program to showcase the the usage of the functions
 
 **For the run.sh :**
 chmod +x run.sh
+
+**For the cleanup.sh :**
+chmod +x cleanup.sh
+
+Before commitng changes run the cleanup.sh

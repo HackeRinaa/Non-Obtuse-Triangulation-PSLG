@@ -1,3 +1,0 @@
-/home/foutrovic/Desktop/Projects/Non-Obtuse-Triangulation-PSLG/cgal_project/built/CMakeFiles/triangulation_program.dir
-/home/foutrovic/Desktop/Projects/Non-Obtuse-Triangulation-PSLG/cgal_project/built/CMakeFiles/edit_cache.dir
-/home/foutrovic/Desktop/Projects/Non-Obtuse-Triangulation-PSLG/cgal_project/built/CMakeFiles/rebuild_cache.dir

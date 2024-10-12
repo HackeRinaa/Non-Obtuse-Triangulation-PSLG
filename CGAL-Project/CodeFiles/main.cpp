@@ -1,4 +1,4 @@
-#include "triangulation_utils.h"
+#include "../HeaderFiles/triangulation_utils.h"
 #include <iostream>
 
 int main()
