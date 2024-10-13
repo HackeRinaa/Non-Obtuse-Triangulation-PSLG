@@ -23,6 +23,7 @@ int main()
         cdt.insert(p);
     }
 
+    // Display the initial triangulation edges
     std::cout << "Initial triangulation:\n";
     for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
     {
@@ -31,10 +32,11 @@ int main()
         std::cout << "Edge (" << v1->point() << ") - (" << v2->point() << ")\n";
     }
 
-    // Insert Steiner points and apply diagonal flips to eliminate obtuse triangles
+    // Refining triangulation to remove obtuse angles
     std::cout << "\nRefining triangulation to remove obtuse angles...\n";
-    insertSteinerPoints(cdt);
+    insertSteinerPoints(cdt);  // Apply diagonal flips and insert Steiner points
 
+    // Display the triangulation after refinement
     std::cout << "\nTriangulation after inserting Steiner points and applying diagonal flips:\n";
     for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
     {

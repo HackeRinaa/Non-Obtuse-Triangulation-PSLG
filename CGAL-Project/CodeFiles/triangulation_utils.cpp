@@ -1,6 +1,7 @@
 #include "../HeaderFiles/triangulation_utils.h"
 #include <cmath>
 #include <iostream>
+#include <set>
 
 // Check if a triangle is obtuse
 bool isObtuse(const CDT::Face_handle &face)
@@ -56,7 +57,7 @@ bool tryDiagonalFlip(CDT &cdt, CDT::Face_handle face)
     {
         if (cdt.is_flipable(face, i))
         {
-            cdt.flip(face, i); // Correct usage of flip method
+            cdt.flip(face, i); // Apply flip
             std::cout << "Diagonal flip applied." << std::endl;
             return true; // A flip was successful
         }
@@ -66,31 +67,34 @@ bool tryDiagonalFlip(CDT &cdt, CDT::Face_handle face)
 
 void insertSteinerPoints(CDT &cdt)
 {
-    bool has_obtuse_angle = true;
+    bool changes_made = true;
     int max_iterations = 1000; // Limit to avoid infinite loops
     int iteration = 0;
-    int obtuse_angles = 0;             // Count of obtuse angles found in each iteration
-    static int prev_obtuse_angles = 0; // Declare prev_obtuse_angles as a static variable
+    std::set<CDT::Face_handle> processed_faces; // Track processed faces
 
-    while (has_obtuse_angle && iteration < max_iterations)
+    while (changes_made && iteration < max_iterations)
     {
-        has_obtuse_angle = false;
-        obtuse_angles = 0; // Reset count for each iteration
-
-        std::vector<Point> steinerPoints;
+        changes_made = false; // Reset changes for this iteration
+        std::vector<Point> steinerPoints; // List of Steiner points to add
 
         // Iterate over all finite faces in the triangulation
         for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face)
         {
-            if (!tryDiagonalFlip(cdt, face))
-            { // Correct call without reference
+            if (processed_faces.count(face) == 0) // Skip faces already processed
+            {
                 if (isObtuse(face))
                 {
-                    Point steinerPoint = calculateSteinerPoint(face);
-                    steinerPoints.push_back(steinerPoint); // Collect Steiner points
-                    has_obtuse_angle = true;               // Flag to keep iterating
-                    obtuse_angles++;                       // Increment count of obtuse angles
-                    std::cout << "Found obtuse angle, inserting Steiner point: " << steinerPoint << std::endl;
+                    bool flip_successful = tryDiagonalFlip(cdt, face); // Try flipping the diagonal
+                    if (!flip_successful)
+                    {
+                        // If no flip was possible, add a Steiner point
+                        Point steinerPoint = calculateSteinerPoint(face);
+                        steinerPoints.push_back(steinerPoint); // Collect Steiner points
+                        changes_made = true; // Indicate a change has been made
+                        std::cout << "Found obtuse angle, inserting Steiner point: " << steinerPoint << std::endl;
+                    }
+
+                    processed_faces.insert(face); // Mark face as processed
                 }
             }
         }
@@ -102,14 +106,13 @@ void insertSteinerPoints(CDT &cdt)
         }
 
         iteration++;
-        std::cout << "Iteration " << iteration << ": " << steinerPoints.size() << " Steiner points inserted. Found " << obtuse_angles << " obtuse angles.\n";
+        std::cout << "Iteration " << iteration << ": " << steinerPoints.size() << " Steiner points inserted.\n";
 
-        // Check if the number of obtuse angles has decreased
-        if (obtuse_angles == 0 || obtuse_angles == prev_obtuse_angles)
+        // Stop if no changes were made in this iteration
+        if (!changes_made && steinerPoints.empty())
         {
-            break; // Stop iterating if no obtuse angles are found or the count hasn't decreased
+            break;
         }
-        prev_obtuse_angles = obtuse_angles; // Store the previous count for comparison
     }
 
     if (iteration >= max_iterations)
