@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
-#include "../HeaderFiles/triangulation_utils.hpp" // Ensure this is the correct path to your header file
+#include "../HeaderFiles/triangulation_utils.hpp" 
 
 using namespace CGAL;
 using namespace std;
@@ -19,14 +19,11 @@ int main() {
         return 1; // Exit with error
     }
 
-    // Read the contents of the file into a string
     std::string input_json((std::istreambuf_iterator<char>(input_file)),
                             std::istreambuf_iterator<char>());
 
-    // Close the file
     input_file.close();
 
-    // Check if the input_json is empty
     if (input_json.empty()) {
         std::cerr << "Error: The input JSON is empty." << std::endl;
         return 1; // Exit with error
@@ -41,14 +38,11 @@ int main() {
         return 1; // Exit with error
     }
 
-    // Initialize containers for points and constraints
     std::vector<Point> points;
     std::vector<std::pair<int, int>> constraints;
 
-    // Parse input JSON to points and constraints
     parseInput(input, points, constraints);
 
-    // Initialize the triangulation
     CDT cdt;
     for (const auto& p : points) {
         cdt.insert(p);
@@ -79,8 +73,8 @@ int main() {
         }
     }
 
-    // Write the triangulation result to JSON format
-    writeOutput(cdt, points, input["instance_uid"]); // Pass points vector instead of a single element
+    
+    writeOutput(cdt, points, input["instance_uid"]); 
 
     return 0;
 }
