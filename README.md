@@ -2,6 +2,12 @@
 
 Using CGAL library for triangulation proccess of a PSLG targeting to non-obtuse angles
 
+## Ομάδα 38
+
+- ### ΦΟΥΤΡΗΣ ΒΑΣΙΛΕΙΟΣ 1115202000231
+
+- ### ΠΑΠΑΔΗΜΗΤΡΙΟΥ ΜΑΡΙΝΑ 1115202100136
+
 ## Λειτουργίες
 
 ### `void parseInput(const nlohmann::json& input, std::vector<Point>& points, std::vector<std::pair<int, int>>& constraints)`
@@ -68,7 +74,6 @@ Using CGAL library for triangulation proccess of a PSLG targeting to non-obtuse 
 
 Αυτή η εφαρμογή απαιτεί τη βιβλιοθήκη CGAL και nlohmann/json για την ανάλυση και την έξοδο των δεδομένων. Βεβαιωθείτε ότι έχετε εγκαταστήσει αυτές τις βιβλιοθήκες πριν από την εκτέλεση του προγράμματος.
 
-
 **To run manually:**
 -del dir built/mkdir built
 -cd built
@@ -83,3 +88,5 @@ chmod +x run.sh
 chmod +x cleanup.sh
 
 Before commitng changes run the cleanup.sh
+
+[Non-Obtuse Triangulation PSLG](https://github.com/HackeRinaa/Non-Obtuse-Triangulation-PSLG)

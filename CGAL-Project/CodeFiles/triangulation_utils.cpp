@@ -7,18 +7,6 @@
 #include <CGAL/squared_distance_2.h>
 #include <algorithm> // for std::clamp
 
-// Using the types defined in triangulation_utils.hpp
-// typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-// typedef K::Point_2 Point;
-// typedef K::Vector_2 Vector;
-// typedef K::FT FT;
-// typedef CGAL::Triangulation_vertex_base_with_info_2<int, K> Vb;
-// typedef CGAL::Constrained_triangulation_face_base_2<K> Fb;
-// typedef CGAL::Triangulation_data_structure_2<Vb, Fb> TDS;
-// typedef CGAL::Exact_predicates_tag Itag;
-// typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, Itag> CDT;
-// typedef CDT::Face_handle Face_handle;
-
 // Function to parse the JSON input
 void parseInput(const nlohmann::json &input, std::vector<Point> &points, std::vector<std::pair<int, int>> &constraints)
 {

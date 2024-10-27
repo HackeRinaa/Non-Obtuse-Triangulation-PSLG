@@ -7,5 +7,5 @@ fi
 mkdir built
 cd built
 cmake ..
-make
+make -j4
 ./triangulation_program

@@ -19,6 +19,9 @@ typedef CGAL::Triangulation_data_structure_2<Vb, Fb> Tds;
 typedef CGAL::Constrained_Delaunay_triangulation_2<K, Tds> CDT;
 typedef CDT::Face_handle Face_handle;
 
+// Edge type definition (pair of face handle and index)
+typedef std::pair<Face_handle, int> Edge;
+
 // Function declarations
 void parseInput(const nlohmann::json &input, std::vector<Point> &points, std::vector<std::pair<int, int>> &constraints);
 bool isObtuse(CDT::Face_handle face);
@@ -29,5 +32,6 @@ bool applyEdgeFlip(CDT &cdt, CDT::Face_handle &face);
 void insertSteinerPoint(CDT &cdt, CDT::Face_handle face);
 Point insertSteinerForPolygon(const std::vector<Point> &polygon_points);
 void applyPolygonalTreatment(CDT &cdt, CDT::Face_handle face1, CDT::Face_handle face2);
+void flipEdgeIfBeneficial(CDT &cdt, const Edge &edge); // Add function declaration here
 
 #endif // TRIANGULATION_UTILS_HPP
