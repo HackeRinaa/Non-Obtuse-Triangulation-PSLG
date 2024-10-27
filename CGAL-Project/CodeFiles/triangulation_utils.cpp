@@ -86,7 +86,7 @@ double approximate_angle_2D(const Point &p1, const Point &p2, const Point &p3)
     double c = std::sqrt(c2);
 
     double cosine_angle = (b2 + c2 - a2) / (2 * b * c);
-    cosine_angle = std::clamp(cosine_angle, -1.0, 1.0);
+    cosine_angle = boost::algorithm::clamp(cosine_angle, -1.0, 1.0);
 
     double angle_radians = std::acos(cosine_angle);
     return angle_radians * (180.0 / M_PI);

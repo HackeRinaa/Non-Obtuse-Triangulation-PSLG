@@ -54,6 +54,8 @@
         10,
         16
     ],
-    "num_constraints": 0,
-    "additional_constraints":   []
+    "num_constraints": 1,
+    "additional_constraints":   [
+        [0, 1]
+    ]
 }

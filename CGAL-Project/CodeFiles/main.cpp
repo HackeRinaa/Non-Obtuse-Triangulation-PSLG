@@ -1,14 +1,14 @@
 #include <iostream>
+#include <fstream> // Include for file handling
 #include <vector>
 #include <string>
 #include <nlohmann/json.hpp>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
-#include "../HeaderFiles/triangulation_utils.hpp" 
+#include "../HeaderFiles/triangulation_utils.hpp"
 
 using namespace CGAL;
 using namespace std;
-
 
 // Main function
 int main() {
@@ -21,7 +21,6 @@ int main() {
 
     std::string input_json((std::istreambuf_iterator<char>(input_file)),
                             std::istreambuf_iterator<char>());
-
     input_file.close();
 
     if (input_json.empty()) {
@@ -35,13 +34,34 @@ int main() {
         input = nlohmann::json::parse(input_json);
     } catch (const nlohmann::json::parse_error& e) {
         std::cerr << "JSON parse error: " << e.what() << std::endl;
+        std::cerr << "Input JSON: " << input_json << std::endl; // Show what was attempted to parse
         return 1; // Exit with error
     }
 
     std::vector<Point> points;
     std::vector<std::pair<int, int>> constraints;
 
-    parseInput(input, points, constraints);
+    try {
+        parseInput(input, points, constraints);
+    } catch (const std::exception& e) {
+        std::cerr << "Error while parsing input: " << e.what() << std::endl;
+        return 1; // Exit with error
+    }
+
+    // Check if points and constraints are populated
+    if (points.empty()) {
+        std::cerr << "Error: No points were parsed from the input." << std::endl;
+        return 1; // Exit with error
+    }
+
+    if (constraints.empty()) {
+        std::cout << "No additional constraints provided." << std::endl;
+    } else {
+        std::cout << "Parsed constraints:" << std::endl;
+        for (const auto& constraint : constraints) {
+            std::cout << "Constraint: (" << constraint.first << ", " << constraint.second << ")" << std::endl;
+        }
+    }
 
     CDT cdt;
     for (const auto& p : points) {
@@ -73,8 +93,20 @@ int main() {
         }
     }
 
-    
-    writeOutput(cdt, points, input["instance_uid"]); 
+    // Prepare output
+    nlohmann::json output;
+    writeOutput(cdt, points, output); 
+
+    // Output results to console or file
+    std::ofstream output_file("../data/output.json");
+    if (output_file.is_open()) {
+        output_file << output.dump(4); // Pretty print with 4 spaces
+        output_file.close();
+        std::cout << "Output written to ../data/output.json" << std::endl;
+    } else {
+        std ::cerr << "Error: Could not open output file." << std::endl;
+        return 1; // Exit with error
+    }
 
     return 0;
 }
