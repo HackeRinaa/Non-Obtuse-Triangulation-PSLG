@@ -1,49 +1,86 @@
-#include "../HeaderFiles/triangulation_utils.h"
 #include <iostream>
+#include <vector>
+#include <string>
+#include <nlohmann/json.hpp>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Constrained_Delaunay_triangulation_2.h>
+#include "../HeaderFiles/triangulation_utils.hpp" // Ensure this is the correct path to your header file
 
-int main()
-{
+using namespace CGAL;
+using namespace std;
+
+
+// Main function
+int main() {
+    // Open the input file
+    std::ifstream input_file("../data/input.json");
+    if (!input_file.is_open()) {
+        std::cerr << "Error: Could not open the file." << std::endl;
+        return 1; // Exit with error
+    }
+
+    // Read the contents of the file into a string
+    std::string input_json((std::istreambuf_iterator<char>(input_file)),
+                            std::istreambuf_iterator<char>());
+
+    // Close the file
+    input_file.close();
+
+    // Check if the input_json is empty
+    if (input_json.empty()) {
+        std::cerr << "Error: The input JSON is empty." << std::endl;
+        return 1; // Exit with error
+    }
+
+    // Parse the JSON input
+    nlohmann::json input;
+    try {
+        input = nlohmann::json::parse(input_json);
+    } catch (const nlohmann::json::parse_error& e) {
+        std::cerr << "JSON parse error: " << e.what() << std::endl;
+        return 1; // Exit with error
+    }
+
+    // Initialize containers for points and constraints
+    std::vector<Point> points;
+    std::vector<std::pair<int, int>> constraints;
+
+    // Parse input JSON to points and constraints
+    parseInput(input, points, constraints);
+
+    // Initialize the triangulation
     CDT cdt;
-
-    // Define points that form an obtuse triangle and additional points
-    std::vector<Point> points = {
-        Point(0, 0), // A
-        Point(1, 0), // B
-        Point(5, 1), // C (angle at this point is obtuse)
-        Point(8, 6), // D
-        Point(2, 6), // E
-        Point(1, 5), // F
-        Point(3, 4), // G
-        Point(8, 8)  // H
-    };
-
-    // Insert initial points into CDT
-    for (const auto &p : points)
-    {
+    for (const auto& p : points) {
         cdt.insert(p);
     }
-
-    // Display the initial triangulation edges
-    std::cout << "Initial triangulation:\n";
-    for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
-    {
-        auto v1 = edge->first->vertex((edge->second + 1) % 3);
-        auto v2 = edge->first->vertex((edge->second + 2) % 3);
-        std::cout << "Edge (" << v1->point() << ") - (" << v2->point() << ")\n";
+    if (!constraints.empty()) {
+        for (const auto& constraint : constraints) {
+            cdt.insert_constraint(points[constraint.first], points[constraint.second]);
+        }   
     }
 
-    // Refining triangulation to remove obtuse angles
-    std::cout << "\nRefining triangulation to remove obtuse angles...\n";
-    insertSteinerPoints(cdt);  // Apply diagonal flips and insert Steiner points
-
-    // Display the triangulation after refinement
-    std::cout << "\nTriangulation after inserting Steiner points and applying diagonal flips:\n";
-    for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
-    {
-        auto v1 = edge->first->vertex((edge->second + 1) % 3);
-        auto v2 = edge->first->vertex((edge->second + 2) % 3);
-        std::cout << "Edge (" << v1->point() << ") - (" << v2->point() << ")\n";
+    // Main loop to refine the triangulation by eliminating obtuse angles
+    bool improvement = true;
+    while (improvement) {
+        improvement = false;
+        for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
+            if (isObtuse(face)) {
+                // First try to resolve the obtuse angle using an edge flip
+                CDT::Face_handle face_handle = face;
+                bool flipped = applyEdgeFlip(cdt, face_handle); 
+                if (!flipped) {
+                    // If flipping fails, insert a Steiner point
+                    insertSteinerPoint(cdt, face);
+                    improvement = true;
+                } else {
+                    improvement = true;
+                }
+            }
+        }
     }
+
+    // Write the triangulation result to JSON format
+    writeOutput(cdt, points, input["instance_uid"]); // Pass points vector instead of a single element
 
     return 0;
 }
