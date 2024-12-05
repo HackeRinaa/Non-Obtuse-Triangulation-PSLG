@@ -33,5 +33,6 @@ void localSearchForSteinerPoints(CDT &cdt, vector<Point> &steinerPoints, int max
 json performTriangulation(const json &inputData, CDT &cdt);
 void writeOutput(const json &inputData, const CDT &cdt, const vector<Point> &steinerPoints, const string &outputFile);
 json extractTriangulationResults(const CDT &cdt);
+Point generateRandomSteinerPoint(const CDT& cdt);
 
 #endif // TRIANGULATION_UTILS_HPP

@@ -10,8 +10,10 @@
 using namespace CGAL;
 using namespace std;
 
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
+int main(int argc, char *argv[])
+{
+    if (argc != 3)
+    {
         cerr << "Usage: " << argv[0] << " <input.json> <output.json>" << endl;
         return 1;
     }
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     // Print updated triangulation results
     std::cout << "Updated Triangulation Results:" << std::endl;
-    std::cout << updatedResults.dump(4) << std::endl; 
+    std::cout << updatedResults.dump(4) << std::endl;
 
     std::cout << "Writing output to " << outputFile << "..." << std::endl;
     writeOutput(updatedResults, cdt, steinerPoints, outputFile);

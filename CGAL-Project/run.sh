@@ -8,4 +8,4 @@ mkdir built
 cd built
 cmake ..
 make -j4
-./triangulation_program
+./triangulation_program ../data/input.json ../data/output.json
