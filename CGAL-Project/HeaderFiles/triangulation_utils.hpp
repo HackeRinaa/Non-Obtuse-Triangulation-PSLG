@@ -28,10 +28,9 @@ typedef CDT::Point Point;
 // Function prototypes
 void parseInput(const string &inputFile, json &inputData);
 bool isObtuse(const CDT::Face_handle &face);
-int countObtuseTriangles(CDT &cdt, const Point &steinerPoint);
-void localSearchForSteinerPoints(CDT &cdt, vector<Point> &steinerPoints, int maxIterations);
-json performTriangulation(const json &inputData, CDT &cdt);
-void writeOutput(const json &inputData, const CDT &cdt, const vector<Point> &steinerPoints, const string &outputFile);
+void localSearchForSteinerPoints(CDT& cdt, vector<Point>& steinerPoints, int L);
+std::vector<Point> performTriangulation(const json &inputData, CDT &cdt);
+void writeOutput(const json& triangulationData, const CDT& cdt, const vector<Point>& steinerPoints, const string& filename) ;
 json extractTriangulationResults(const CDT &cdt);
 Point generateRandomSteinerPoint(const CDT& cdt);
 

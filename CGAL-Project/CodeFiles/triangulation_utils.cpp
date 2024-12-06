@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <map>
+#include <cmath>
 #include <nlohmann/json.hpp> // JSON library
 
 using namespace std;
@@ -23,8 +25,7 @@ typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, Itag> CDT;
 typedef CDT::Point Point;
 
 // Function to check if a triangle is obtuse
-bool isObtuse(const CDT::Face_handle &face)
-{
+bool isObtuse(const CDT::Face_handle &face) {
     auto a = face->vertex(0)->point();
     auto b = face->vertex(1)->point();
     auto c = face->vertex(2)->point();
@@ -33,201 +34,272 @@ bool isObtuse(const CDT::Face_handle &face)
     K::FT bc2 = CGAL::squared_distance(b, c);
     K::FT ca2 = CGAL::squared_distance(c, a);
 
+    // Check if any angle is obtuse using the squared lengths
     return ab2 + bc2 < ca2 || ab2 + ca2 < bc2 || bc2 + ca2 < ab2;
 }
 
-bool isCloseToExistingPoint(const Point &point, const CDT &cdt, double threshold = 1e-5)
-{
-    for (auto vertex = cdt.finite_vertices_begin(); vertex != cdt.finite_vertices_end(); ++vertex)
-    {
-        Point existingPoint = vertex->point();
-        if (CGAL::squared_distance(point, existingPoint) < threshold * threshold)
-        {
-            return true; // Point is close to an existing vertex
-        }
-    }
-    return false; // No close points found
+// Function to check if the triangle has an obtuse angle
+bool hasObtuseAngle(const Point &p0, const Point &p1, const Point &p2) {
+    double a2 = CGAL::squared_distance(p1, p2);  // distance squared
+    double b2 = CGAL::squared_distance(p0, p2);
+    double c2 = CGAL::squared_distance(p0, p1);
+
+    return (b2 + c2 < a2 || a2 + c2 < b2 || a2 + b2 < c2);  // Check for obtuseness
 }
 
-json extractTriangulationResults(const CDT &cdt)
-{
-    json results;
-    results["vertices"] = json::array();
-    results["edges"] = json::array();
-    results["faces"] = json::array();
-
-    // Create a mapping from vertex handles to indices
-    std::map<CDT::Vertex_handle, int> vertexIndexMap;
-    int index = 0;
-
-    // Extract vertices
-    for (auto vertex = cdt.finite_vertices_begin(); vertex != cdt.finite_vertices_end(); ++vertex)
-    {
-        Point p = vertex->point();
-        results["vertices"].push_back({{"x", CGAL::to_double(p.x())}, {"y", CGAL::to_double(p.y())}});
-        vertexIndexMap[vertex] = index++;
-    }
-
-    // Extract faces and edges
-    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face)
-    {
-        json faceData = json::array();
-        for (int i = 0; i < 3; ++i)
-        {
-            Point p = face->vertex(i)->point();
-            faceData.push_back({{"x", CGAL::to_double(p.x())}, {"y", CGAL::to_double(p.y())}});
-        }
-        results["faces"].push_back(faceData);
-
-        // Extract edges as pairs of vertex indices using the mapping
-        for (int i = 0; i < 3; ++i)
-        {
-            int v1_index = vertexIndexMap[face->vertex(i)];
-            int v2_index = vertexIndexMap[face->vertex((i + 1) % 3)];
-            results["edges"].push_back({v1_index, v2_index});
+int countObtuseTriangles(const CDT &cdt) {
+    int obtuseCount = 0;
+    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
+        if (cdt.is_infinite(face)) continue;  // Skip infinite faces
+        
+        Point p0 = face->vertex(0)->point();
+        Point p1 = face->vertex(1)->point();
+        Point p2 = face->vertex(2)->point();
+        
+        if (hasObtuseAngle(p0, p1, p2)) {
+            obtuseCount++;
         }
     }
-
-    return results;
+    return obtuseCount;
 }
 
-int countObtuseTriangles(CDT &cdt, const Point &steinerPoint)
-{
+Point getMidpoint(const Point &p1, const Point &p2) {
+    return Point((p1.x() + p2.x()) / 2, (p1.y() + p2.y()) / 2);
+}
+
+
+Point getCentroid(const Point &p0, const Point &p1, const Point &p2) {
+    return Point((p0.x() + p1.x() + p2.x()) / 3, (p0.y() + p1.y() + p2.y()) / 3);
+}
+
+
+Point getCircumcenter(const Point &p0, const Point &p1, const Point &p2) {
+    // Use formula to calculate the circumcenter
+    double D = 2 * (p0.x() * (p1.y() - p2.y()) + p1.x() * (p2.y() - p0.y()) + p2.x() * (p0.y() - p1.y()));
+    double Ux = ((p0.x() * p0.x() + p0.y() * p0.y()) * (p1.y() - p2.y()) + (p1.x() * p1.x() + p1.y() * p1.y()) * (p2.y() - p0.y()) + (p2.x() * p2.x() + p2.y() * p2.y()) * (p0.y() - p1.y())) / D;
+    double Uy = ((p0.x() * p0.x() + p0.y() * p0.y()) * (p2.x() - p1.x()) + (p1.x() * p1.x() + p1.y() * p1.y()) * (p0.x() - p2.x()) + (p2.x() * p2.x() + p2.y() * p2.y()) * (p1.x() - p0.x())) / D;
+
+    return Point(Ux, Uy);
+}
+
+
+Point projectVertexOntoEdge(const Point &p0, const Point &p1, const Point &p2) {
+    // Compute the projection of p0 onto the edge p1p2
+    double x0 = p0.x(), y0 = p0.y();
+    double x1 = p1.x(), y1 = p1.y();
+    double x2 = p2.x(), y2 = p2.y();
+
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+
+    double t = ((x0 - x1) * dx + (y0 - y1) * dy) / (dx * dx + dy * dy);
+
+    // The projection point
+    double px = x1 + t * dx;
+    double py = y1 + t * dy;
+
+    return Point(px, py);
+}
+
+double sign(const Point &p1, const Point &p2, const Point &p3) {
+    return (p1.x() - p3.x()) * (p2.y() - p3.y()) - (p2.x() - p3.x()) * (p1.y() - p3.y());
+}
+
+bool isPointInsideTriangle(const Point &p, const Point &p0, const Point &p1, const Point &p2) {
+    double d1 = sign(p, p0, p1);
+    double d2 = sign(p, p1, p2);
+    double d3 = sign(p, p2, p0);
+
+    bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);  // If all signs are the same, point is inside
+}
+
+
+std::vector<Point> generateCandidatePoints(const Point &p0, const Point &p1, const Point &p2) {
+    std::vector<Point> candidates;
+
+    // Midpoint of the longest edge
+    Point midpoint = getMidpoint(p0, p1);  // Helper function to compute midpoint
+    candidates.push_back(midpoint);
+
+    // Centroid of the triangle
+    Point centroid = getCentroid(p0, p1, p2);  // Helper function to compute centroid
+    candidates.push_back(centroid);
+
+    // Circumcenter of the triangle
+    Point circumcenter = getCircumcenter(p0, p1, p2);  // Helper function to compute circumcenter
+    candidates.push_back(circumcenter);
+
+    // Projection of obtuse vertex onto opposite edge
+    Point projection = projectVertexOntoEdge(p0, p1, p2);  // Helper function to project vertex
+    candidates.push_back(projection);
+  
+
+    return candidates;
+}
+
+
+// Function to evaluate the triangulation and penalize obtuse triangles
+double evaluateTriangulation(const CDT &cdt) {
+    double score = 0.0;
+    int totalTriangles = 0;
     int obtuseCount = 0;
 
-    // Insert the Steiner point temporarily
-    CDT::Vertex_handle newVertex = cdt.insert(steinerPoint);
+    // Count the total number of triangles and the obtuse triangles
+    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
+        if (cdt.is_infinite(face)) continue;
 
-    // Iterate over faces to count obtuse triangles
-    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face)
-    {
-        if (isObtuse(face))
-        {
+        Point p0 = face->vertex(0)->point();
+        Point p1 = face->vertex(1)->point();
+        Point p2 = face->vertex(2)->point();
+
+        totalTriangles++;
+
+        if (hasObtuseAngle(p0, p1, p2)) {
             obtuseCount++;
         }
     }
 
-    // Remove the inserted point
-    cdt.remove(newVertex);
+    // Calculate the score as a fraction of obtuse triangles
+    if (totalTriangles > 0) {
+        score = -static_cast<double>(obtuseCount) / totalTriangles;
+    }
 
-    return obtuseCount;
+    // Debugging output
+    cout << "Total triangles: " << totalTriangles << ", Obtuse triangles: " << obtuseCount << ", Score: " << score << endl;
+
+    return score;
 }
 
 // Function to perform local search for Steiner points
-void localSearchForSteinerPoints(CDT &cdt, vector<Point> &steinerPoints, int maxIterations)
-{
-    int iterationCount = 0;
-    bool improved = true;
+void localSearchForSteinerPoints(CDT &cdt, std::vector<Point> &steinerPoints, int maxIterations) {
+    for (int iter = 0; iter < maxIterations; ++iter) {
+        bool improvementMade = false;
+        cout << "Iteration: " << iter << endl;
 
-    while (improved && iterationCount < maxIterations)
-    {
-        improved = false;
+        // Iterate through all finite faces (triangles) in the triangulation
+        for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
+            if (cdt.is_infinite(face)) continue; // Skip infinite faces
 
-        for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face)
-        {
-            if (isObtuse(face))
-            {
-                auto a = face->vertex(0)->point();
-                auto b = face->vertex(1)->point();
-                auto c = face->vertex(2)->point();
+            // Get the vertices of the triangle
+            Point p0 = face->vertex(0)->point();
+            Point p1 = face->vertex(1)->point();
+            Point p2 = face->vertex(2)->point();
 
-                // Compute circumcenter
-                Point circumcenter = CGAL::circumcenter(a, b, c);
+            // Skip triangles that do not have obtuse angles
+            if (!hasObtuseAngle(p0, p1, p2)) continue;
 
-                // Check if the circumcenter is a good candidate
-                if (isCloseToExistingPoint(circumcenter, cdt))
-                {
-                    continue; // Skip if it's too close to existing points
+            // Generate candidate Steiner points
+            std::vector<Point> candidatePoints = generateCandidatePoints(p0, p1, p2);
+            if (candidatePoints.empty()) {
+                cout << "No candidate points generated for triangle (" << p0 << ", " << p1 << ", " << p2 << ")" << endl;
+                continue;
+            }
+
+            Point bestPoint;
+            int minObtuseCount = std::numeric_limits<int>::max(); // Start with a large number of obtuse triangles
+
+
+            // Evaluate each candidate point
+            for (const auto &candidate : candidatePoints) {
+
+                // Insert the candidate point and check if the insertion is successful
+                auto vh = cdt.insert(candidate);
+                if (vh == nullptr) {
+                    continue; // Skip this candidate if insertion fails
                 }
 
-                // Count obtuse triangles after adding the circumcenter
-                int obtuseCountBefore = countObtuseTriangles(cdt, circumcenter);
-                cdt.insert(circumcenter);
-                int obtuseCountAfter = countObtuseTriangles(cdt, circumcenter);
+                // Count the number of obtuse triangles after insertion
+                int obtuseCount = countObtuseTriangles(cdt);
 
-                // Compare counts and decide
-                if (obtuseCountAfter < obtuseCountBefore)
-                {
-                    steinerPoints.push_back(circumcenter);
-                    improved = true;
-                    std::cout << "Inserted Steiner point at: (" << CGAL::to_double(circumcenter.x())
-                              << ", " << CGAL::to_double(circumcenter.y()) << ")" << std::endl;
+                // Check if this candidate results in fewer obtuse triangles
+                if (obtuseCount < minObtuseCount) {
+                    bestPoint = candidate;
+                    minObtuseCount = obtuseCount;
                 }
-                else
-                {
-                    cdt.remove(cdt.finite_vertices_begin()); // Remove the circumcenter if it didn't help
-                }
+
+                // Remove the candidate point to evaluate the next one
+                cdt.remove(vh);
+            }
+
+            // If a valid candidate is found that reduces obtuse triangles, insert it
+            int currentObtuseCount = countObtuseTriangles(cdt); // Get current obtuse count
+            if (minObtuseCount < currentObtuseCount) { // Compare with current obtuse count
+                cdt.insert(bestPoint);  // Insert the best point found
+                steinerPoints.push_back(bestPoint);  // Add best point to the list
+                cout << "Inserted Steiner point: " << bestPoint << " with obtuse triangles: " << minObtuseCount << endl;
+                improvementMade = true;
+            } else {
+                cout << "No improvement found for triangle (" << p0 << ", " << p1 << ", " << p2 << ")" << endl;
             }
         }
-        iterationCount++;
-    }
 
-    if (iterationCount == maxIterations)
-    {
-        std::cerr << "Warning: Maximum iteration limit reached in local search for Steiner points." << std::endl;
+        // Exit the loop if no improvement was made
+        if (!improvementMade) break;
     }
 }
 
-// Function to perform Delaunay triangulation with vertex indexing
-json performTriangulation(const json &inputData, CDT &cdt)
-{
+
+// Function to extract triangulation results into JSON format
+json extractTriangulationResults(const CDT &cdt) {
+    json result;
+    result["triangles"] = json::array();
+
+    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
+        if (cdt.is_infinite(face)) continue;
+
+        json triangle;
+        for (int i = 0; i < 3; ++i) {
+            Point p = face->vertex(i)->point();
+            triangle.push_back({CGAL::to_double(p.x()), CGAL::to_double(p.y())});
+        }
+        result["triangles"].push_back(triangle);
+    }
+
+    return result;
+}
+
+
+std::vector<Point> performTriangulation(const json &inputData, CDT &cdt) {
     json result;
 
     // Check if points_x and points_y are arrays
-    if (!inputData["points_x"].is_array() || !inputData["points_y"].is_array())
-    {
-        cerr << "Error: points_x and points_y must be arrays." << endl;
+    if (!inputData["points_x"].is_array() || !inputData["points_y"].is_array()) {
+        std::cerr << "Error: points_x and points_y must be arrays." << std::endl;
         exit(1);
     }
 
     // Step 1: Insert points into the CDT
     size_t numPoints = inputData["points_x"].size();
-    for (size_t i = 0; i < numPoints; ++i)
-    {
+    for (size_t i = 0; i < numPoints; ++i) {
         double x = inputData["points_x"][i];
         double y = inputData["points_y"][i];
         cdt.insert(Point(x, y));
     }
-    std::cout << "Inserted " << cdt.number_of_vertices() << " points into CDT." << std::endl;
 
     // Step 2: Insert constraints (edges) into the CDT
-    if (inputData.contains("additional_constraints"))
-    {
-        if (!inputData["additional_constraints"].is_array())
-        {
-            cerr << "Error: additional_constraints must be an array." << endl;
+    if (inputData.contains("additional_constraints")) {
+        if (!inputData["additional_constraints"].is_array()) {
+            std::cerr << "Error: additional_constraints must be an array." << std::endl;
             exit(1);
         }
 
         const auto &constraints = inputData["additional_constraints"];
-        for (const auto &constraint : constraints)
-        {
-            if (!constraint.is_array() || constraint.size() != 2)
-            {
-                cerr << "Error: Each constraint must be an array of two indices." << endl;
-                exit(1);
-            }
+        for (const auto &constraint : constraints) {
             size_t index1 = constraint[0];
             size_t index2 = constraint[1];
-
-            // Ensure indices are within bounds
-            if (index1 >= numPoints || index2 >= numPoints)
-            {
-                cerr << "Error: Constraint indices out of bounds." << endl;
-                exit(1);
-            }
 
             Point p1(inputData["points_x"][index1], inputData["points_y"][index1]);
             Point p2(inputData["points_x"][index2], inputData["points_y"][index2]);
             cdt.insert_constraint(p1, p2);
-            std::cout << "Inserted constraint between points: (" << p1.x() << ", " << p1.y() << ") and ("
-                      << p2.x() << ", " << p2.y() << ")" << std::endl;
         }
     }
 
     // Step 3: Perform local search for Steiner points
-    vector<Point> steinerPoints;
-    localSearchForSteinerPoints(cdt, steinerPoints, 1000); // Adjust max iterations as needed
+    std::vector<Point> steinerPoints;
+    localSearchForSteinerPoints(cdt, steinerPoints, 1000); // L parameter from input
 
     // Step 4: Extract triangulation results
     result = extractTriangulationResults(cdt);
@@ -238,16 +310,18 @@ json performTriangulation(const json &inputData, CDT &cdt)
     result["steiner_points_x"] = json::array();
     result["steiner_points_y"] = json::array();
 
-    for (const auto &sp : steinerPoints)
-    {
+    for (const auto &sp : steinerPoints) {
         result["steiner_points_x"].push_back(CGAL::to_double(sp.x()));
         result["steiner_points_y"].push_back(CGAL::to_double(sp.y()));
     }
 
     result["message"] = "Triangulation completed successfully!";
+    result["method"] = "local";
 
-    return result;
+    // Return both the result and the steiner points
+    return steinerPoints;
 }
+
 
 Point generateRandomSteinerPoint(CDT &cdt)
 {
@@ -315,7 +389,7 @@ void simulatedAnnealing(CDT &cdt, vector<Point> &steinerPoints, double alpha, do
     double coolingRate = 0.99;
 
     // Compute the initial energy
-    int initialObtuseTriangles = countObtuseTriangles(cdt, Point(0, 0));
+    int initialObtuseTriangles = countObtuseTriangles(cdt);
     int initialSteinerPoints = steinerPoints.size();
     double energy = alpha * initialObtuseTriangles + beta * initialSteinerPoints;
 
@@ -328,7 +402,7 @@ void simulatedAnnealing(CDT &cdt, vector<Point> &steinerPoints, double alpha, do
             Point candidatePoint = generateRandomSteinerPoint(cdt);
 
             // Compute the new energy
-            int newObtuseTriangles = countObtuseTriangles(cdt, candidatePoint);
+            int newObtuseTriangles = countObtuseTriangles(cdt);
             double newEnergy = alpha * newObtuseTriangles + beta * (initialSteinerPoints + 1);
 
             // Calculate the energy difference
@@ -356,83 +430,57 @@ void simulatedAnnealing(CDT &cdt, vector<Point> &steinerPoints, double alpha, do
     std::cout << "Simulated annealing completed." << std::endl;
 }
 
-void writeOutput(const json &inputData, const CDT &cdt, const std::vector<Point> &steinerPoints, const std::string &outputFile)
-{
+// Function to write triangulation output
+void writeOutput(const json& triangulationData, const CDT& cdt, const std::vector<Point>& steinerPoints, const std::string& filename) {
     json outputData;
 
-    // Prepare vertices
-    outputData["vertices"] = json::array();
-    for (auto vertex = cdt.finite_vertices_begin(); vertex != cdt.finite_vertices_end(); ++vertex)
-    {
-        json vertexData;
-        vertexData["x"] = CGAL::to_double(vertex->point().x());
-        vertexData["y"] = CGAL::to_double(vertex->point().y());
-        outputData["vertices"].push_back(vertexData);
+    // Copy input triangulation data
+    outputData["content_type"] = "CG_SHOP_2025_Solution";
+    outputData["instance_uid"] = triangulationData["instance_uid"];
+
+    // Add Steiner points (if any) to the output data
+    outputData["steiner_points_x"] = json::array();
+    outputData["steiner_points_y"] = json::array();
+    for (const auto& sp : steinerPoints) {
+        outputData["steiner_points_x"].push_back(CGAL::to_double(sp.x()));
+        outputData["steiner_points_y"].push_back(CGAL::to_double(sp.y()));
     }
 
-    // Prepare edges
+    // Extract edges from the triangulation
     outputData["edges"] = json::array();
-    for (auto edge : cdt.finite_edges())
-    {
-        json edgeData;
-        auto vh1 = edge.first->vertex(edge.second);
-        auto vh2 = edge.first->vertex((edge.second + 1) % 3);
-        edgeData.push_back(vh1->info().first);
-        edgeData.push_back(vh2->info().first);
-        outputData["edges"].push_back(edgeData);
-    }
+    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face) {
+        if (cdt.is_infinite(face)) continue;
 
-    // Prepare faces
-    outputData["faces"] = json::array();
-    for (auto face = cdt.finite_faces_begin(); face != cdt.finite_faces_end(); ++face)
-    {
-        json faceData = json::array();
-        for (int i = 0; i < 3; ++i)
-        {
-            json vertexData;
-            vertexData["x"] = CGAL::to_double(face->vertex(i)->point().x());
-            vertexData["y"] = CGAL::to_double(face->vertex(i)->point().y());
-            faceData.push_back(vertexData);
+        // Add edges of the current triangle
+        for (int i = 0; i < 3; ++i) {
+            auto v1 = face->vertex(i);
+            auto v2 = face->vertex((i + 1) % 3);
+
+            // Find the index of each vertex
+            int index1 = -1, index2 = -1;
+            int idx = 0;
+            for (auto v = cdt.vertices_begin(); v != cdt.vertices_end(); ++v) {
+                if (v->point() == v1->point()) index1 = idx;
+                if (v->point() == v2->point()) index2 = idx;
+                ++idx;
+            }
+
+            if (index1 > index2) std::swap(index1, index2);
+
+            outputData["edges"].push_back({index1, index2});
         }
-        outputData["faces"].push_back(faceData);
     }
 
-    // Prepare Steiner points
-    outputData["steiner_points"] = json::array();
-    for (const auto &sp : steinerPoints)
-    {
-        json spData;
-        spData["x"] = CGAL::to_double(sp.x());
-        spData["y"] = CGAL::to_double(sp.y());
-        outputData["steiner_points"].push_back(spData);
-    }
+    // Add method and parameters (you can define them as needed)
+    outputData["method"] = triangulationData["method"];
+    outputData["parameters"] = triangulationData["parameters"];
 
-    std::cout << "Attempting to write output to " << outputFile << std::endl;
-    std::ofstream outFile(outputFile);
-    if (!outFile.is_open())
-    {
-        std::cerr << "Error: Could not open output file " << outputFile << " for writing." << std::endl;
-        return;
+    // Write the JSON to file
+    std::ofstream outputFile(filename);
+    if (!outputFile) {
+        throw std::runtime_error("Could not open output file.");
     }
-
-    outFile << outputData.dump(4);
-
-    if (!outFile)
-    {
-        std::cerr << "Error: Failed to write data to " << outputFile << "." << std::endl;
-    }
-    else
-    {
-        std::cout << "Output successfully written to " << outputFile << "." << std::endl;
-    }
-
-    outFile.close();
-    if (!outFile.good())
-    {
-        std::cerr << "Error: Closing the file failed or not all data was flushed." << std::endl;
-    }
-
-    std::cout << "File closed successfully. Check " << outputFile << " for output." << std::endl;
+    outputFile << outputData.dump(4);  // Pretty print the JSON with an indent of 4 spaces
 }
 
 void parseInput(const string &inputFile, json &inputData)
