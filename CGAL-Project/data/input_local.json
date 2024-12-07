@@ -8,14 +8,8 @@
     "additional_constraints": [
       [2, 5]
     ],
-    "method": "aco",
+    "method": "local",
     "parameters": {
-      "alpha": 1.0,
-      "beta": 2.0,
-      "xi": 0.5,
-      "psi": 1.0,
-      "lambda": 0.7,
-      "kappa": 10,
       "L": 100
     },
     "delaunay": true

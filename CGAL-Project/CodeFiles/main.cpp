@@ -27,9 +27,7 @@ int main(int argc, char *argv[])
 
     std::cout << "Parsing input JSON..." << std::endl;
     parseInput(inputFile, inputData);
-
-    std::cout << "Performing local search for Steiner points..." << std::endl;
-     // Extract the updated triangulation results after the local search
+    // Extract the updated triangulation results after the local search
     steinerPoints = performTriangulation(inputData, cdt);
     // Print updated triangulation results
     std::cout << "Updated Triangulation Results:" << std::endl;
