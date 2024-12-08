@@ -29,9 +29,7 @@ int main(int argc, char *argv[])
     parseInput(inputFile, inputData);
     // Extract the updated triangulation results after the local search
     steinerPoints = performTriangulation(inputData, cdt);
-    // Print updated triangulation results
     std::cout << "Updated Triangulation Results:" << std::endl;
-    
 
     std::cout << "Writing output to " << outputFile << "..." << std::endl;
     writeOutput(inputData, cdt, steinerPoints, outputFile);
