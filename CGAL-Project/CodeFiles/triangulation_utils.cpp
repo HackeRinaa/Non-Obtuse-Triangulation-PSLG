@@ -140,6 +140,8 @@ std::vector<Point> generateCandidatePoints(const Point &p1, const Point &p2, con
     // Centroid
     candidates.push_back(CGAL::centroid(p1, p2, p3));
 
+    candidates.push_back(generateRandomPointInTriangle(p1, p2, p3));
+
     return candidates;
 }
 
@@ -696,4 +698,46 @@ void parseInput(const string &inputFile, json &inputData)
         exit(1);
     }
     inFile >> inputData;
+}
+
+void hybridOptimization(CDT &cdt, std::vector<Point> &steinerPoints, double alpha, double beta, int saIterations, int acoCycles, double evaporationRate)
+{
+    // Perform simulated annealing first
+    simulatedAnnealing(cdt, steinerPoints, alpha, beta, saIterations);
+
+    // Then perform ant colony optimization
+    antColonyOptimization(cdt, steinerPoints, 10 /*numAnts*/, acoCycles, evaporationRate);
+}
+
+double evaluateMaxEdgeLength(const CDT &cdt)
+{
+    double maxEdge = 0.0;
+    for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
+    {
+        auto v1 = edge->first->vertex(edge->second)->point();
+        auto v2 = edge->first->vertex(edge->third)->point();
+        maxEdge = std::max(maxEdge, CGAL::squared_distance(v1, v2));
+    }
+    return maxEdge;
+}
+
+double evaluateTriangulationWithEdgeLength(const CDT &cdt)
+{
+    double obtusePenalty = evaluateTriangulation(cdt); // Existing obtuse triangle score
+    double maxEdgeLength = evaluateMaxEdgeLength(cdt);
+    return obtusePenalty + 0.1 * maxEdgeLength; // Weighted combination
+}
+
+Point generateRandomPointInTriangle(const Point &p0, const Point &p1, const Point &p2)
+{
+    double r1 = ((double)rand() / RAND_MAX);
+    double r2 = ((double)rand() / RAND_MAX);
+    if (r1 + r2 > 1)
+    {
+        r1 = 1 - r1;
+        r2 = 1 - r2;
+    }
+    double x = p0.x() + r1 * (p1.x() - p0.x()) + r2 * (p2.x() - p0.x());
+    double y = p0.y() + r1 * (p1.y() - p0.y()) + r2 * (p2.y() - p0.y());
+    return Point(x, y);
 }
