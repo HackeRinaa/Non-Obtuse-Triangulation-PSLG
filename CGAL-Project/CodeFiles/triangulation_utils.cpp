@@ -562,11 +562,11 @@ double evaluateMaxEdgeLength(const CDT &cdt)
     double maxEdge = 0.0;
     for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
     {
-        auto v1 = edge->first->vertex(edge->second)->point();
-        auto v2 = edge->first->vertex(edge->second)->point();
+        auto v1 = edge->first->vertex(cdt.cw(edge->second))->point();
+        auto v2 = edge->first->vertex(cdt.ccw(edge->second))->point();
         maxEdge = std::max(maxEdge, CGAL::squared_distance(v1, v2));
     }
-    return maxEdge;
+    return std::sqrt(maxEdge); // Return the actual distance, not squared distance
 }
 
 double evaluateTriangulationWithEdgeLength(const CDT &cdt)
