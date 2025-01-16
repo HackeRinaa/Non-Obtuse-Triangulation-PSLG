@@ -1,0 +1,22 @@
+{
+    "instance_uid": "test_polygon_ant_colony_alt",
+    "num_points": 10,
+    "points_x": [100, 50, 0, 100, 200, 300, 400, 300, 200, 150],
+    "points_y": [200, 300, 200, 100, 50, 50, 200, 300, 400, 350],
+    "region_boundary": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
+    "num_constraints": 1,
+    "additional_constraints": [
+        [3, 6]
+    ],
+    "method": "aco",
+    "parameters": {
+        "alpha": 2.0,
+        "beta": 1.5,
+        "xi": 0.6,
+        "psi": 1.2,
+        "lambda": 0.8,
+        "kappa": 8,
+        "L": 150
+    },
+    "delaunay": true
+}

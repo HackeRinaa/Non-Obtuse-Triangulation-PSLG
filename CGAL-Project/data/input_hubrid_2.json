@@ -1,0 +1,21 @@
+{
+    "instance_uid": "test_polygon_hybrid_v1",
+    "num_points": 12,
+    "points_x": [100, 200, 300, 400, 300, 200, 100, 50, 150, 250, 350, 450],
+    "points_y": [100, 100, 100, 100, 200, 200, 200, 150, 250, 250, 250, 250],
+    "region_boundary": [0, 1, 2, 3, 4, 5, 6, 0],
+    "num_constraints": 2,
+    "additional_constraints": [
+        [1, 6],
+        [3, 5]
+    ],
+    "method": "hybrid",
+    "parameters": {
+        "alpha": 1.0,
+        "beta": 2.0,
+        "saIterations": 100,
+        "acoCycles": 50,
+        "evaporationRate": 0.75
+    },
+    "delaunay": true
+}

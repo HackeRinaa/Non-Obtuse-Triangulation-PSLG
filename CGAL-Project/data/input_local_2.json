@@ -1,0 +1,17 @@
+{
+    "instance_uid": "test_polygon_local_alt",
+    "num_points": 8,
+    "points_x": [50, 100, 150, 200, 200, 150, 100, 50],
+    "points_y": [50, 100, 150, 100, 50, 0, 0, 50],
+    "region_boundary": [0, 1, 2, 3, 4, 5, 6, 7, 0],
+    "num_constraints": 2,
+    "additional_constraints": [
+        [2, 6],
+        [1, 4]
+    ],
+    "method": "local",
+    "parameters": {
+        "L": 150
+    },
+    "delaunay": false
+}
