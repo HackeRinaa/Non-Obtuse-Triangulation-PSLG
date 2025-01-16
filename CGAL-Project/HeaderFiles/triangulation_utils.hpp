@@ -28,12 +28,15 @@ typedef CDT::Point Point;
 // Function prototypes
 void parseInput(const string &inputFile, json &inputData);
 bool isObtuse(const CDT::Face_handle &face);
-void localSearchForSteinerPoints(CDT& cdt, vector<Point>& steinerPoints, int L);
+void localSearchForSteinerPoints(CDT &cdt, vector<Point> &steinerPoints, int L);
 std::vector<Point> performTriangulation(const json &inputData, CDT &cdt);
-void writeOutput(const json& triangulationData, const CDT& cdt, const vector<Point>& steinerPoints, const string& filename);
+void writeOutput(const json &triangulationData, const CDT &cdt, const vector<Point> &steinerPoints, const string &filename);
 void simulatedAnnealing(CDT &cdt, vector<Point> &steinerPoints, double alpha, double beta, int L);
 void antColonyOptimization(CDT &cdt, std::vector<Point> &steinerPoints, int numAnts, int maxCycles, double evaporationRate);
 json extractTriangulationResults(const CDT &cdt);
-Point generateRandomSteinerPoint(const CDT& cdt);
+Point generateRandomSteinerPoint(const CDT &cdt);
+
+double evaluateMaxEdgeLength(const CDT &cdt);
+int countObtuseTriangles(const CDT &cdt);
 
 #endif // TRIANGULATION_UTILS_HPP

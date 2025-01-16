@@ -24,7 +24,6 @@ typedef CGAL::Exact_intersections_tag Itag;
 typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, Itag> CDT;
 typedef CDT::Point Point;
 
-
 void hybridOptimization(CDT &cdt, std::vector<Point> &steinerPoints, double alpha, double beta, int saIterations, int acoCycles, double evaporationRate);
 double evaluateMaxEdgeLength(const CDT &cdt);
 double evaluateTriangulationWithEdgeLength(const CDT &cdt);
@@ -150,7 +149,6 @@ std::vector<Point> generateCandidatePoints(const Point &p1, const Point &p2, con
 
     return candidates;
 }
-
 
 // Function to evaluate the triangulation and penalize obtuse triangles
 double evaluateTriangulation(const CDT &cdt)
@@ -550,7 +548,6 @@ void simulatedAnnealing(CDT &cdt, vector<Point> &steinerPoints, double alpha, do
     std::cout << "Simulated annealing completed." << std::endl;
 }
 
-
 void hybridOptimization(CDT &cdt, std::vector<Point> &steinerPoints, double alpha, double beta, int saIterations, int acoCycles, double evaporationRate)
 {
     // Perform simulated annealing first
@@ -566,7 +563,7 @@ double evaluateMaxEdgeLength(const CDT &cdt)
     for (auto edge = cdt.finite_edges_begin(); edge != cdt.finite_edges_end(); ++edge)
     {
         auto v1 = edge->first->vertex(edge->second)->point();
-        auto v2 = edge->first->vertex(edge->third)->point();
+        auto v2 = edge->first->vertex(edge->second)->point();
         maxEdge = std::max(maxEdge, CGAL::squared_distance(v1, v2));
     }
     return maxEdge;
@@ -592,8 +589,6 @@ Point generateRandomPointInTriangle(const Point &p0, const Point &p1, const Poin
     double y = p0.y() + r1 * (p1.y() - p0.y()) + r2 * (p2.y() - p0.y());
     return Point(x, y);
 }
-
-
 
 std::vector<Point> performTriangulation(const json &inputData, CDT &cdt)
 {
@@ -654,13 +649,14 @@ std::vector<Point> performTriangulation(const json &inputData, CDT &cdt)
         int L = params.value("L", 100);
         antColonyOptimization(cdt, steinerPoints, kappa, L, lambda);
     }
-    else if (method == "hybrid") {
+    else if (method == "hybrid")
+    {
         double alpha = params.value("alpha", 1.0);
         double beta = params.value("beta", 2.0);
         int saIterations = params.value("saIterations", 100);
         int acoCycles = params.value("acoCycles", 100);
         double evaporationRate = params.value("evaporationRate", 0.5);
-        hybridOptimization(cdt, steinerPoints, alpha, beta, saIterations, acoCycles, evaporateRate);
+        hybridOptimization(cdt, steinerPoints, alpha, beta, saIterations, acoCycles, evaporationRate);
     }
     else
     {

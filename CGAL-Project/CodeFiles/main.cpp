@@ -1,5 +1,4 @@
-#include "triangulation_utils.hpp" // Adjusted the include path if needed
-#include <iostream>
+#include "../HeaderFiles/triangulation_utils.hpp"
 #include <fstream>
 #include <vector>
 #include <string>
@@ -7,7 +6,8 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
 
-// Avoid using `using namespace` globally to prevent name conflicts
+using namespace CGAL;
+using namespace std;
 using json = nlohmann::json;
 
 int main(int argc, char *argv[])
@@ -42,10 +42,6 @@ int main(int argc, char *argv[])
     }
 
     // Initialize triangulation and Steiner points
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-    typedef CGAL::Constrained_Delaunay_triangulation_2<K> CDT;
-    typedef CDT::Point Point;
-
     CDT cdt;
     std::vector<Point> steinerPoints;
 
