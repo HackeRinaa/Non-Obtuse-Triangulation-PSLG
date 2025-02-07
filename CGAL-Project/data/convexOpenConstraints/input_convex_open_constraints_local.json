@@ -1,0 +1,14 @@
+{
+    "instance_uid": "convex_open_constraints_local",
+    "num_points": 12,
+    "points_x": [0, 100, 200, 300, 400, 500, 400, 300, 200, 100, 50, 450],
+    "points_y": [0, 50, 100, 150, 100, 50, 0, -50, -100, -50, 75, 75],
+    "region_boundary": [0,1,2,3,4,5,6,7,8,9,0],
+    "num_constraints": 2,
+    "additional_constraints": [[10, 11]],
+    "method": "local",
+    "parameters": {
+        "L": 100
+    },
+    "delaunay": true
+}

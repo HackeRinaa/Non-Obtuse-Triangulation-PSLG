@@ -1,0 +1,14 @@
+{
+    "instance_uid": "convex_no_constraints_sa",
+    "num_points": 10,
+    "points_x": [0, 50, 100, 150, 200, 250, 200, 150, 100, 50],
+    "points_y": [0, 50, 100, 150, 100, 50, 0, -50, -100, -50],
+    "region_boundary": [0,1,2,3,4,5,6,7,8,9,0],
+    "num_constraints": 0,
+    "additional_constraints": [],
+    "method": "simulated_annealing",
+    "parameters": {
+        "alpha": 1.5, "beta": 2.5, "L": 150
+    },
+    "delaunay": true
+}

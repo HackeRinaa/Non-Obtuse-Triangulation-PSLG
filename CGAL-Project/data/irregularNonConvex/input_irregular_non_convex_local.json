@@ -1,0 +1,14 @@
+{
+    "instance_uid": "irregular_non_convex",
+    "num_points": 15,
+    "points_x": [100, 50, 0, 100, 200, 300, 400, 350, 200, 150, 100, 50, 0, 50, 25],
+    "points_y": [100, 150, 100, 50, 25, 50, 100, 200, 300, 250, 200, 150, 200, 250, 300],
+    "region_boundary": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0],
+    "num_constraints": 4,
+    "additional_constraints": [[1, 5], [3, 8], [6, 10], [2, 12]],
+    "method": "local",
+    "parameters": {
+        "L": 100
+    },
+    "delaunay": true
+}

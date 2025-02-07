@@ -1,0 +1,21 @@
+{
+  "instance_uid": "non_convex_parallel",
+  "num_points": 10,
+  "points_x": [0, 50, 100, 150, 200, 250, 100, 150, 200, 50],
+  "points_y": [0, 50, 0, 50, 0, 50, 100, 150, 200, 100],
+  "region_boundary": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
+  "num_constraints": 2,
+  "additional_constraints": [
+    [1, 6],
+    [3, 8]
+  ],
+  "method": "hybrid",
+  "parameters": {
+    "alpha": 1.0,
+    "beta": 1.8,
+    "saIterations": 150,
+    "acoCycles": 50,
+    "evaporationRate": 0.6
+  },
+  "delaunay": true
+}
